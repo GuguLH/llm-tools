@@ -16,9 +16,9 @@ prompt = PromptTemplate.from_template(
 
 # 2 llm
 llm = ChatOpenAI(
-    model="deepseek-chat",
-    api_key=os.getenv("DS_API_KEY"),
-    base_url=os.getenv("DS_BASE"),
+    model="openai/gpt-oss-20b:free",
+    api_key=os.getenv("OPEN_ROUTER_API_KEY"),
+    base_url=os.getenv("OPEN_ROUTER_URL"),
     temperature=0
 )
 
