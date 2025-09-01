@@ -4,65 +4,86 @@ MONTH_SUMMARY_PROMPT = (
 # 用户的周报:
 ```
 第一周主要工作内容如下：
-1、	使用LangChain框架结合LCEL跑通主流程;
-2、	对于MCP 工具调用使用ReACT Agent完成;
-3、	完全使用ReACT的方式让大模型自主决策并实现工具调用,但是发现DATA_QUERY流程很慢,准备使用将相关Agent拆分的方式,以及引入LangGraph;
-4、	Java版本Markdown列表跳转相关的Bug修复,本地测试通过,等待测试人员测试;
+1.	Human-in-loop机制开发与优化
+-	完成工具调用结果传递至LLM的技术攻关，实现本地案例完整Human-in-loop闭环（含人工参数修正功能）;
+-	将FunctionOperation节点改造为支持人工干预模式，支持工具执行/参数修改的自主选择（代码已提交至future/2025-08-04分支）;
+-	探索子图架构方案时发现状态同步问题，最终采用子图嵌入主图改造方案
+2.	对话系统架构调整
+-	优化intent处理逻辑以支持多轮对话场景;
+-	完成Function Operation节点的主图嵌入改造;
+-	发现历史记录模块与新版架构的兼容性问题，提出自定义checkpointer解决方案;
+3.	持久化方案研究
+-	评估LangGraph官方InMemorySaver/Postgres/Redis方案;
+-	测试langchain-checkpointer-redis插件后发现有很多额外的功能及操作是我们用不到的,所以参考官方的实现案例,完成了一个异步的RedisSaver;
+-	开发完成适配FastAPI的异步RedisSaver
 总结主要研究:
-1.	学习研究ReACT Agent实现
-2.	学习LangGraph相关API
-
+1.	研究了LangGraph的Human-in-loop
+2.	研究学习了LangGraph的CheckPointer机制
 ```
 ```
 第二周主要工作内容如下：
-1、	Java ChatBot关于Markdown列表跳转代码的Bug修复和优化: 跳转不再通过大模型语义理解的方式,而是代码精准匹配;
-2、	基于React和LangGraph搭建了整体Agent,完成了多节点的图的编排,包含intent, data_query, doc_query, function_operation, open_module, other以及routing ;
-3、	function_operation添加上下文记忆, LLM 客户端单例改写;
-4、	markdown列表跳转Python代码改写, 所有Prompt从DB动态加载;
-5、	Excel下载接口的改写及完善, EChart Tools不再从MCP Server获得,使用langgraph的tool装饰器完成;
+1.	会话流程重构
+-	重新设计会话流程结构，采用单一入口节点（负责新建会话并传递父消息ID）和出口节点（负责持久化对话消息到MySQL）;
+-	优化Flux State状态管理，改用add规约函数进行消息累加，简化消息列表维护;
+-	实现消息裁剪功能（默认保留3轮对话），并修复历史消息加载时的消息类型过滤问题
+2.	可视化工具节点优化
+-	将ECharts节点独立为echarts_tool_node;
+-	解决图表显示问题：修复radius返回null导致饼图不显示的问题;
+-	解决中文乱码问题：通过二次封装json.dump解决PyEcharts的编码问题;
+-	新增"可视化更新"功能，支持根据用户指令动态变更图表类型
+3.	功能迭代与问题修复
+-	调整RedisSaver的TTL设置，从永久改为7天保留;
+-	重构DataQuery Node，实现表格和图表生成的并行处理;
+-	修复人类干预逻辑：解决reject后重复执行问题，完善提示信息;
+-	改进工具调用记录，新增工具返回值记录功能
+4.	协作与测试
+-	与前端协商人类干预场景的字段返回规范
+-	持续进行新功能测试和问题排查
 总结主要研究:
-1.	学习研究Chromadb相关API
-2.	学习LangGraph CheckPointer
+1.	主要研究trim_message API,最终改进了消息轮次判定逻辑（HumanMessage→HumanMessage为一个完整轮次）
 ```
 ```
 第三周主要工作内容如下：
-1、	使用modelscope加载本地embedding 大模型,使用RAG技术检索工具,并将最有可能的5个工具给Agent;
-2、	对embedding模型在FastAPI初始化时就加载,避免每一次重复加载,利用文件hash避免每次都需要重建Chroma数据库tools集合
-3、	LLM管理平台对于conversation和message的改造, 完成history_load_node和history_persistent_node相关代码逻辑的编写;
-4、	对传给大模型的历史记忆进行裁剪,目前是只保留最新的5轮对话,完成对chat-history相关接口的代码编写;
-5、	Stream流式输出根据分块进行输出,主要对chart和sql分块进行整体输出;
-6、	Excel下载接口的改写及完善: 小于1000行数据正常查询并写入Excel;对于大于1000行数据,使用Python的stream流式查询,每次处理流中的1000行数据,然后再将查询到的数据进行数据清洗,最终分块写入Excel;
-7、	完成了基于callback机制的token消耗记录,并且将其设置为可配置项,可以按需开启
+1.	图表与接口稳定性提升
+-	修复 ECharts 图表不显示问题：定位到 SQL Bot 返回 `null` 值导致 Pydantic 模型校验失败，已通过容错处理解决;
+-	修复 History 列表展示接口报错，确保历史记录正常返回;
+-	为会话列表添加临时 token 认证方案，统一与 `/chat` 的认证逻辑
+2.	对话系统 Prompt 与业务逻辑优化
+-	对现有 Prompt 进行重构，加入语言约束并将 Prompt 存储至数据库，后续通过 DB 加载;
+-	在 SimpleChat 中加入无关问题过滤，统一返回“很抱歉，我无法提供该类内容。”提示;
+-	LLM routing 模块改用策略模式，消除冗余 if‑else，提升可维护性
+3.	多语言支持与 i18n 集成
+-	开发并集成 i18n 管理器，支持多语言提示与输出;
+-	通过 FastAPI 依赖注入实现 i18n，Graph 端使用函数指针包装 `translate`，保证配置一致;
+-	完成多语言功能的全部实现与测试，确保前端与后端语言切换无缝对接
+4.	异步数据库与架构改造
+-	将图架构中异步数据库会话改为 FastAPI 依赖注入方式，统一管理数据库连接
+5.	性能评估与工具改进
+-	编写脚本对大模型 SQL 生成效率进行对比测试
+-	在 MCP 服务测试中发现重复工具问题，已反馈并跟进修复
 总结主要研究:
-1.	学习研究:LangChain一些callback API
+1.	主要思考i18n的实现方式.以及多语言的切换
+2.	思考SQL Bot的优化改进方式
 ```
 ```
 第四周主要工作内容如下：
-本周主要工作内容如下：
-1.	大模型工具调用日志记录优化
-初期尝试使用`on_tool_start`等callback API记录工具调用日志未果;
-改用`on_llm_end`解析大模型输出，间接获取tool_calls参数;
-完成日志输出到控制台功能，并修复了LLM chat意图识别相关bug
-2.	RAG检索工具改进
-将本地向量模型替换为阿里通义向量模型;
-优化Docker打包流程，精简项目依赖;
-编写适用于生产环境的Dockerfile并进行本地测试
-3.	日志持久化系统开发
-设计tool_call日志记录表结构;
-完成相关API接口开发;
-实现前端页面展示及样式优化
-4.	问题修复与优化
-解决用户输入生成柱状图但是却生成其他图表相关问题;
-与Java版本相同统一AI错误提示;
-实现Excel下载地址灵活配置;
-调整RAG检索工具相似度搜索结果为3条
-5.	Human-in-loop预研
-学习LangGraph相关API;
-编写基础Human-in-loop案例代码
+1.	RAG 研究与实现
+-	研究了 RAG 中文档切分的关键技术，使用 deepdoc 进行 PDF 识别并评估 OCR 的准确率;
+-	对 Excel 数据表进行通用切分时发现 token 上下文超限，导致向量化失败；通过调整切分规则并验证后，解决了数据错乱问题;
+-	初步探索了开源 RAG 框架Llama‑Index与LangChain‑ChatChat
+2.	LLM 管理平台开发
+-	完成后端统计 API 与前端 Dashboard 页面，实现了按时间维度自动触发数据请求, 提升了用户体验;
+-	在会话管理页面新增“发起会话人”字段，并在聊天历史返回中加入评价字段（好评/中评/差评），方便前端回显;
+-	解决了前端路由刷新导致的页面错误，修改 Nginx 配置后恢复正常
+3.	系统优化与 Bug 修复
+-	解决了 Graph Checkpointer与 Redis 的连接问题：新建专用 Redis 连接并关闭默认字符串转换，保证了图数据的持久化;
+-	修复了历史会话记录无法显示最新记录的 bug，恢复了会话历史的完整性;
+-	处理了多语言模块的 OpenModule 解析与人工干预，提升了多语言支持的稳定性;
+-	与前端及测试团队沟通，完成反馈接口的实现，待后端提供 SQL 数据回传接口;
+-	对前端与测试提出的问题进行快速定位与修复，保持了项目迭代的高效节奏
 总结主要研究:
-1.	深入研究了LangChain callback API的使用方法
-2.	探索了不同向量模型在RAG中的应用效果
-3.	再次学习了LangGraph框架的基本原理和使用方式
+1.	研究了市面上开源的RAG框架Llama-Index与LangChain‑ChatChat的使用
+2.	研究了本地GPU运行embedding模型进行向量推理方案
 ```
 # 主要可生成功能点:
 	- 本月回顾:简述本月主要的工作内容以及工作亮点
