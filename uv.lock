@@ -617,6 +617,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "dashscope" },
     { name = "dotenv" },
+    { name = "langchain" },
     { name = "langchain-chroma" },
     { name = "langchain-community" },
     { name = "langchain-openai" },
@@ -627,6 +628,7 @@ dependencies = [
 requires-dist = [
     { name = "dashscope", specifier = ">=1.24.2" },
     { name = "dotenv", specifier = ">=0.9.9" },
+    { name = "langchain", specifier = ">=0.3.27" },
     { name = "langchain-chroma", specifier = ">=0.2.5" },
     { name = "langchain-community", specifier = ">=0.3.27" },
     { name = "langchain-openai", specifier = ">=0.3.28" },
