@@ -15,8 +15,15 @@ prompt = PromptTemplate.from_template(
 )
 
 # 2 llm
+# llm = ChatOpenAI(
+#     model="openai/gpt-oss-20b:free",
+#     api_key=os.getenv("OPEN_ROUTER_API_KEY"),
+#     base_url=os.getenv("OPEN_ROUTER_URL"),
+#     temperature=0
+# )
+
 llm = ChatOpenAI(
-    model="openai/gpt-oss-20b:free",
+    model="qwen/qwen3-235b-a22b:free",
     api_key=os.getenv("OPEN_ROUTER_API_KEY"),
     base_url=os.getenv("OPEN_ROUTER_URL"),
     temperature=0

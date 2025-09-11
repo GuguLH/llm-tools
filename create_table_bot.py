@@ -17,7 +17,7 @@ table_fields = """
 | **document_id**       | BIGINT   | NOT NULL   | —      | 外键，关联到 `documents` 表          |
 | **chunk_text**        | TEXT     | NOT NULL   | —      | 分块的文本内容，用于送入 LLM         |
 | **start_char_offset** | BIGINT   | NULL       | —      | 文本分块在原始文档中的起始字符偏移量 |
-| **metadata**          | JSON     | NULL       | —      | 分块级别的元数据，如标题、章节等     |
+| **meta_data**         | JSON     | NULL       | —      | 分块级别的元数据，如标题、章节等     |
 """
 
 # 1 prompt
