@@ -1,4 +1,5 @@
 import os
+import time
 
 import dotenv
 from langchain_core.output_parsers import StrOutputParser
@@ -35,3 +36,5 @@ llm = ChatOpenAI(
 chain = chat_prompt | llm | StrOutputParser()
 
 print(chain.invoke({}))
+
+start_time = time.time()
