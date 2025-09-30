@@ -16,7 +16,7 @@ system_prompt = SystemMessagePromptTemplate.from_template(
 )
 
 human_prompt = HumanMessagePromptTemplate.from_template(
-    template="生成本月回顾",
+    template="只生我的思考",
 )
 
 chat_prompt = ChatPromptTemplate.from_messages([
@@ -25,6 +25,12 @@ chat_prompt = ChatPromptTemplate.from_messages([
 ])
 
 # 2 llm
+# llm = ChatOpenAI(
+#     model="openai/gpt-oss-20b:free",
+#     api_key=os.getenv("OPEN_ROUTER_API_KEY"),
+#     base_url=os.getenv("OPEN_ROUTER_URL"),
+#     temperature=0
+# )
 llm = ChatOpenAI(
     model="qwen/qwen3-235b-a22b:free",
     api_key=os.getenv("OPEN_ROUTER_API_KEY"),
